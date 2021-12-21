@@ -1,22 +1,26 @@
 import { sigmoid, dsigmoid } from './math.js';
 
 /** 
- * 
+ * A single perceptron. 
+ * It will: 
+ * - Receive/handle the inputs through the links
+ * - Process them with its activation function
+ * - Send it to its links on the opposite side
  */
-class Perceptron {
+export class Perceptron {
     constructor() {
 
-        /** References to the forward layer's perceptrons 
-         * @type {Perceptron[]}
+        /** Links connected to the forward layer's perceptrons 
+         * @type {Link[]}
          */
         this.forwardLinks = [];
 
-        /** References to the backward layer's perceptrons 
-         * @type {Perceptron[]}
+        /** Links connected to the backward layer's perceptrons 
+         * @type {Link[]}
          */
         this.backwardLinks = [];
 
-        /** Result of the matrix dot product
+        /** Result of the sums
          * @type {Number}
          */
         this.sum = 0;
@@ -26,18 +30,69 @@ class Perceptron {
          */
         this.output = 0;
 
-        /** The perceptron's bias 
+        /** The perceptron's bias (defaults to a random number between 0 and 1)
          * @type {Number}
          */
         this.bias = Math.random();
     }
+    /** 
+     * Given the direction of incoming inputs, computes the sum of the product of each value times the weigths
+     * 
+     * @param {'left' | 'right'} [from] The direction of the links
+     */
+    computeSum(from = 'left') {
+        this.sum = 0;
+
+        this.backwardLinks.forEach(link => {
+            this.sum += link.carriedValue * link.weight;
+        })
+    }
+
     /** Applies the activation function to the sum */
     activationFunction() {
         this.computedOutput = sigmoid(this.sum);
     }
 
+    /** Resets the links */
+    resetLinks() {
+        this.forwardLinks = [];
+        this.backwardLinks = [];
+    }
+    /** 
+     * Creates a new link between this perceptron and another one in the right direction.
+     * @param {Perceptron} perceptron A given perceptron to link to
+     * 
+     */
+    createLink(perceptronR) {
+        let link = new Link(this, perceptronR);
+        this.forwardLinks.push(link);
+        perceptronR.backwardLinks.push(link);
+    }
 
+    /** 
+     * Sends the output through each link towards a given direction
+     * 
+     * @param {'left' | 'right'} [to] The direction of the links
+     */
+    sendOutput(to = 'right') {
+        switch (to) {
+            case 'left':
+                this.backwardLinks.forEach(link => {
+                    link.value = this.output;
+                })
+                break;
+            case 'right':
+                this.forwardLinks.forEach(link => {
+                    link.value = this.output;
+                })
+                break;
+        }
+    }
 }
+
+
+
+
 
 /** Represents a link between two perceptrons */
 class Link {
@@ -47,38 +102,27 @@ class Link {
      * @param {Perceptron} perceptronB 
      */
     constructor(perceptronA, perceptronB) {
+
         /**
          * Input multiplier
          * @type {Number}
          */
         this.weight = 1;
-    }
-}
 
-/** A neural network layer */
-export class Layer {
-    constructor() {
-        /**
-         * Collection of Perceptrons
-         * @type {Perceptron[]}
+        /** 
+         * Carried input
+         * @type {Number}
          */
-        this.nodes = [];
-    }
+        this.carriedValue = 0;
 
-    /** Initializes the layer by adding a specified amount of perceptrons
-     *  
-     * @param {Number} amount Amount of perceptrons
-     */
-    initialize(amount) {
-        for (let i = 0; i < amount; i++) {
-            this.nodes.push(new Perceptron());
-        }
-    }
-    /** Computes the sum (dot product) of each perceptron times the weights
-     * 
-     * @param {Perceptron} perceptron A perceptron where to send 
-     */
-    dotProduct(perceptron) {
-        this.computedOutput = sigmoid(this.sum);
+        /** Left end of the link 
+         * @type {Perceptron}
+         */
+        this.left = perceptronA;
+
+        /** Right end of the link 
+         * @type {Perceptron}
+         */
+        this.right = perceptronB;
     }
 }
