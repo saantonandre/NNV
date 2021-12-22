@@ -1,6 +1,7 @@
 import { Layer } from './layer.js';
 
 export class NeuralNetwork {
+    /** Creates a new instance of a neural network */
     constructor() {
         /**
          * @type {Layer}
@@ -20,6 +21,7 @@ export class NeuralNetwork {
         /** Represents the impact of errors over the back propagation */
         this.learningRate = 0.1;
     }
+
     /** 
      * Initializes the layers by adding a specified amount of perceptrons
      *  
@@ -48,6 +50,11 @@ export class NeuralNetwork {
         this.hiddenLayers[this.hiddenLayers.length - 1].link(this.outputLayer);
     }
 
+    /**
+     * Trains this neural network for a given amount of cycles
+     * 
+     * @param {Number} inputs An array of values to pass through the network
+     */
     feedForward(inputs) {
         this.inputLayer.set(inputs);
         this.inputLayer.sendOutputs();
@@ -67,14 +74,38 @@ export class NeuralNetwork {
         })
         return outputs;
     }
+
     /**
      * Trains this neural network for a given amount of cycles
-     * @param {Number} epochs The amount of cycles
+     * 
+     * @param {Number[]} output An array of values to pass through the network
      */
-    train(epochs) {
+    propagateBackwards(output) {
+        // Compute errors and propagate backwards to each layer
 
     }
-    /** */
+    /**
+     * Trains this neural network for a given amount of cycles
+     * 
+     * @param {Number} epochs The amount of cycles
+     * @param {Number[][]} dataset The dataset with which this neural network will be trained
+     */
+    train(epochs, dataset) {
+        this.feedForward();
+    }
+    /**
+     * Trains this neural network for a given amount of cycles
+     * 
+     * @param {Number} epochs The amount of cycles
+     * @param {Number[][]} dataset The dataset with which this neural network will be trained
+     */
+    train(epochs, dataset) {
+        this.feedForward();
+    }
+
+    /** Logs the output after a feed forward session 
+     * @param {Number[]} inputs An array of values to pass through the network
+     */
     test(inputs) {
         console.log(this.feedForward(inputs))
     }
