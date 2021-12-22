@@ -28,7 +28,7 @@ export class Perceptron {
         /** The computed output (will get sent to forward perceptrons) 
          * @type {Number}
          */
-        this.output = 0;
+        this.computedOutput = 0;
 
         /** The perceptron's bias (defaults to a random number between 0 and 1)
          * @type {Number}
@@ -38,18 +38,21 @@ export class Perceptron {
     /** 
      * Given the direction of incoming inputs, computes the sum of the product of each value times the weigths
      * 
-     * @param {'left' | 'right'} [from] The direction of the links
+     * @param {'backward' | 'forward'} [direction] The direction of the links
      */
-    computeSum(from = 'left') {
+    computeSum(direction = 'forward') {
         this.sum = 0;
-
-        this.backwardLinks.forEach(link => {
-            this.sum += link.carriedValue * link.weight;
-        })
+        switch (direction) {
+            case 'forward':
+                this.backwardLinks.forEach(link => {
+                    this.sum += link.carriedValue * link.weight;
+                })
+                break;
+        }
     }
 
     /** Applies the activation function to the sum */
-    activationFunction() {
+    activation() {
         this.computedOutput = sigmoid(this.sum);
     }
 
@@ -57,6 +60,10 @@ export class Perceptron {
     resetLinks() {
         this.forwardLinks = [];
         this.backwardLinks = [];
+    }
+    /** Adds this perceptron's bias to its sum */
+    addBias() {
+        this.sum += this.bias;
     }
     /** 
      * Creates a new link between this perceptron and another one in the right direction.
@@ -71,19 +78,18 @@ export class Perceptron {
 
     /** 
      * Sends the output through each link towards a given direction
-     * 
-     * @param {'left' | 'right'} [to] The direction of the links
+     * @param {'backward' | 'forward'} [direction] = The direction of the links, defaults to 'forward'
      */
-    sendOutput(to = 'right') {
-        switch (to) {
-            case 'left':
+    sendOutput(direction = 'forward') {
+        switch (direction) {
+            case 'backward':
                 this.backwardLinks.forEach(link => {
-                    link.value = this.output;
+                    link.carriedValue = this.computedOutput;
                 })
                 break;
-            case 'right':
+            case 'forward':
                 this.forwardLinks.forEach(link => {
-                    link.value = this.output;
+                    link.carriedValue = this.computedOutput;
                 })
                 break;
         }
@@ -94,7 +100,11 @@ export class Perceptron {
 
 
 
-/** Represents a link between two perceptrons */
+/** 
+ * Represents a link between two perceptrons.
+ *  
+ * There is a link abstraction solely to serve rendering functions of this model.
+ */
 class Link {
     /**
      * Creates a link between two perceptrons
@@ -118,11 +128,11 @@ class Link {
         /** Left end of the link 
          * @type {Perceptron}
          */
-        this.left = perceptronA;
+        this.backward = perceptronA;
 
         /** Right end of the link 
          * @type {Perceptron}
          */
-        this.right = perceptronB;
+        this.forward = perceptronB;
     }
 }

@@ -1,3 +1,4 @@
+import { Perceptron } from './perceptron.js';
 /** A neural network layer */
 export class Layer {
     /**
@@ -26,19 +27,76 @@ export class Layer {
     }
 
     /** 
-     * Sends the values to another layer
-     * 
-     * @param {'left' | 'right'} direction The direction of the links
+     * Initializes the links towards a given layer
+     *  
+     * @param {Layer} layer Amount of perceptrons
      */
-    sendValues(direction = 'right') {
+    link(layer) {
+        // Links each perceptron of this layer to each perceptron of the given layer
+        this.nodes.forEach(perceptronA => {
+            layer.nodes.forEach(perceptronB => {
+                perceptronA.createLink(perceptronB);
+            })
+        })
+    }
 
+    /** 
+     * For each perceptron, adds its bias to its sum
+     *  
+     * @param {Layer} layer Amount of perceptrons
+     */
+    applyBias(layer) {
+        // Links each perceptron of this layer to each perceptron of the given layer
+        this.nodes.forEach(perceptron => {
+            perceptron.addBias();
+        })
     }
     /** 
-     * Receives the values from another layer
+     * Sets this nodes output values to a specific amount.
      * 
-     * @param {'left' | 'right'} direction The direction of the links
+     * Values length must be the same amount as the length of this nodes
+     * 
+     * @param {Number[]} values The values to assign to this layer's perceptrons
      */
-    receiveValues(direction = 'right') {
+    set(values) {
+        if (values.length !== this.nodes.length) {
+            throw new Error("Values amount must be the same as the amount of perceptrons");
+        }
+        // Links each perceptron of this layer to each perceptron of the given layer
+        this.nodes.forEach((perceptron, i) => {
+            perceptron.computedOutput = values[i];
+        })
+    }
 
+    /** 
+     * Sends the values inside a layer to a given direction
+     * 
+     * @param {'backward' | 'forward'} direction The direction of the links
+     */
+    sendOutputs(direction = 'forward') {
+        this.nodes.forEach(perceptron => {
+            perceptron.sendOutput(direction);
+        })
+    }
+
+    /** 
+     * Collects and sums the values of the backward links
+     * 
+     * @param {'backward' | 'forward'} direction The direction of the links
+     */
+    computeSum(direction = 'forward') {
+        this.nodes.forEach(perceptron => {
+            perceptron.computeSum(direction);
+        })
+    }
+    /** 
+     * Collects and sums the values of the backward links
+     * 
+     * @param {'backward' | 'forward'} direction The direction of the links
+     */
+    activation() {
+        this.nodes.forEach(perceptron => {
+            perceptron.activation();
+        })
     }
 }

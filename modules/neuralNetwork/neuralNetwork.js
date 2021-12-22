@@ -1,4 +1,4 @@
-import { Layer } from './perceptron.js';
+import { Layer } from './layer.js';
 
 export class NeuralNetwork {
     constructor() {
@@ -6,10 +6,12 @@ export class NeuralNetwork {
          * @type {Layer}
          */
         this.inputLayer;
+
         /**
          * @type {Layer[]}
          */
         this.hiddenLayers;
+
         /**
          * @type {Layer}
          */
@@ -17,7 +19,6 @@ export class NeuralNetwork {
 
         /** Represents the impact of errors over the back propagation */
         this.learningRate = 0.1;
-        this.initialize();
     }
     /** 
      * Initializes the layers by adding a specified amount of perceptrons
@@ -31,13 +32,50 @@ export class NeuralNetwork {
      * 
      */
     initialize(inputNodes = 2, hiddenNodes = [2], outputNodes = 1) {
-
+        // Creates the layers
         this.inputLayer = new Layer(inputNodes);
 
         this.hiddenLayers = [];
         hiddenNodes.forEach(perceptronsAmount => { this.hiddenLayers.push(new Layer(perceptronsAmount)) });
 
         this.outputLayer = new Layer(outputNodes);
+        // Links the layers
 
+        this.inputLayer.link(this.hiddenLayers[0]);
+        for (let i = 0; i < this.hiddenLayers.length - 1; i++) {
+            this.hiddenLayers[i].link(this.hiddenLayers[i + 1]);
+        }
+        this.hiddenLayers[this.hiddenLayers.length - 1].link(this.outputLayer);
+    }
+
+    feedForward(inputs) {
+        this.inputLayer.set(inputs);
+        this.inputLayer.sendOutputs();
+        for (let i = 0; i < this.hiddenLayers.length; i++) {
+            this.hiddenLayers[i].computeSum();
+            this.hiddenLayers[i].applyBias();
+            this.hiddenLayers[i].activation();
+            this.hiddenLayers[i].sendOutputs();
+        }
+        this.outputLayer.computeSum();
+        this.outputLayer.applyBias();
+        this.outputLayer.sendOutputs();
+        this.outputLayer.activation();
+        let outputs = [];
+        this.outputLayer.nodes.forEach(perceptron => {
+            outputs.push(perceptron.computedOutput);
+        })
+        return outputs;
+    }
+    /**
+     * Trains this neural network for a given amount of cycles
+     * @param {Number} epochs The amount of cycles
+     */
+    train(epochs) {
+
+    }
+    /** */
+    test(inputs) {
+        console.log(this.feedForward(inputs))
     }
 }
