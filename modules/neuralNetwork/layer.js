@@ -14,7 +14,41 @@ export class Layer {
 
         this.initialize(perceptronsAmount);
     }
-
+    /**
+     * Pushes the computed outputs of each perceptron in an array and returns it
+     * @returns {Number[]}
+     */
+    get values() {
+        let layerValues = [];
+        this.nodes.forEach(perceptron => { layerValues.push(perceptron.computedOutput) })
+        return layerValues;
+    }
+    /**
+     * Returns a matrix representing the weights of each perceptron of this layer
+     * @returns {Number[][]}
+     */
+    get weights() {
+        let weightsArr = [];
+        this.nodes.forEach(perceptron => {
+            let pWeights = [];
+            perceptron.forwardLinks.forEach(link => {
+                pWeights.push(link.weight);
+            })
+            weights.push(pWeights);
+        })
+        return weightsArr;
+    }
+    /**
+     * Returns a matrix representing the weights of each perceptron of this layer
+     * @returns {Number[][]}
+     */
+    get biases() {
+        let biasesArr = [];
+        this.nodes.forEach(perceptron => {
+            biasesArr.push(perceptron.bias);
+        })
+        return biasesArr;
+    }
     /** 
      * Initializes the layer by adding a specified amount of perceptrons
      *  
@@ -43,9 +77,8 @@ export class Layer {
     /** 
      * For each perceptron, adds its bias to its sum
      *  
-     * @param {Layer} layer Amount of perceptrons
      */
-    applyBias(layer) {
+    applyBias() {
         // Links each perceptron of this layer to each perceptron of the given layer
         this.nodes.forEach(perceptron => {
             perceptron.addBias();
@@ -89,14 +122,47 @@ export class Layer {
             perceptron.computeSum(direction);
         })
     }
+
     /** 
-     * Collects and sums the values of the backward links
+     * Collects the deltas of the targets minus the actual outputs
      * 
-     * @param {'backward' | 'forward'} direction The direction of the links
+     * @param {Number[]} targets The target correct outputs
+     * 
+     * @returns {Number[]} target - guess
+     */
+    getErrors(targets) {
+        let errors = [];
+        this.nodes.forEach((perceptron, i) => {
+            errors.push(perceptron.computeError(targets[i]));
+        })
+        return errors;
+    }
+
+    /** 
+     * Tweaks biases and backward weights for each perceptron
+     * @param {Number} learningRate Tweak factor
+     */
+    tweak(learningRate) {
+        this.nodes.forEach(perceptron => {
+            perceptron.tweak(learningRate);
+        });
+    }
+    /** 
+     * Calls the activation function to each perceptron in this layer
+     * 
      */
     activation() {
         this.nodes.forEach(perceptron => {
-            perceptron.activation();
+            perceptron.computedOutput = perceptron.activation();
+        })
+    }
+    /** 
+     * Calls the deactivation function to each perceptron in this layer
+     * 
+     */
+    deactivation() {
+        this.nodes.forEach(perceptron => {
+            perceptron.computedOutput = perceptron.deactivation();
         })
     }
 }

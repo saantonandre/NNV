@@ -30,10 +30,16 @@ export class Perceptron {
          */
         this.computedOutput = 0;
 
-        /** The perceptron's bias (defaults to a random number between 0 and 1)
+        /** The perceptron's bias (will get ranzomized on initialization)
          * @type {Number}
          */
-        this.bias = Math.random();
+        this.bias = 0;
+
+
+        /** The latest error made by this perceptron
+         * @type {Number}
+         */
+        this.error = 0;
     }
     /** 
      * Given the direction of incoming inputs, computes the sum of the product of each value times the weigths
@@ -51,9 +57,20 @@ export class Perceptron {
         }
     }
 
-    /** Applies the activation function to the sum */
+    /** 
+     * @returns {Number} The result of this computed sum passed through the activation function 
+     */
     activation() {
-        this.computedOutput = sigmoid(this.sum);
+        // Activation function here
+        return sigmoid(this.sum);
+    }
+
+    /** 
+     * @returns {Number} The result of this computed sum passed through the deactivation function 
+     */
+    deactivation() {
+        // Deactivation function here
+        return dsigmoid(this.computedOutput);
     }
 
     /** Resets the links */
@@ -70,10 +87,10 @@ export class Perceptron {
      * @param {Perceptron} perceptron A given perceptron to link to
      * 
      */
-    createLink(perceptronR) {
-        let link = new Link(this, perceptronR);
+    createLink(perceptron) {
+        let link = new Link(this, perceptron);
         this.forwardLinks.push(link);
-        perceptronR.backwardLinks.push(link);
+        perceptron.backwardLinks.push(link);
     }
 
     /** 
@@ -94,6 +111,34 @@ export class Perceptron {
                 break;
         }
     }
+    /**
+     * Computes the errors and tweaks the weights, relatively to a target or to the forward weights
+     * @param {Number} target 
+     * @returns {Number} this.error
+     */
+    computeError(target) {
+        this.error = 0;
+        if (this.forwardLinks.length === 0) {
+            this.error = target - this.computedOutput;
+        } else {
+            this.forwardLinks.forEach(link => {
+                this.error += link.weight * link.forward.error;
+            });
+        }
+        return this.error;
+    }
+    /** 
+     * Tweaks the bias and weights relatively to this.error 
+     * @param {Number} learningRate
+     */
+    tweak(learningRate) {
+        let gradient = this.deactivation() * this.error * learningRate;
+        this.bias += gradient;
+        this.backwardLinks.forEach(link => {
+            link.weight += gradient * link.backward.computedOutput;
+        })
+    }
+
 }
 
 
@@ -117,7 +162,7 @@ class Link {
          * Input multiplier
          * @type {Number}
          */
-        this.weight = 1;
+        this.weight = 0.5;
 
         /** 
          * Carried input

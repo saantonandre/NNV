@@ -1,16 +1,18 @@
 export class Text {
-    constructor(x, y, color = '#aeb5bd', align = "center", baseline = "middle") {
+    constructor(x, y, color = '#ff0000', align = "center", baseline = "middle") {
         this.content = '';
         this.x = x;
         this.y = y;
         this.color = color;
         this.align = align;
         this.baseline = baseline;
-        this.fontSize = 7;
+        this.fontSize = 14;
         this.font = 'Consolas, monaco, monospace';
         this.shadow = false;
         this.shadowColor = '#100820';
-        this.strokeWidth = 0.3;
+        this.stroke = true;
+        this.strokeColor = '#000000';
+        this.strokeWidth = 3;
 
     }
     get shadowOffsetX() {
@@ -22,7 +24,7 @@ export class Text {
     canvasFont(ratio) {
         return 'bold ' + Math.round(this.fontSize * ratio) + 'px ' + this.font
     }
-    render(context, tilesize, ratio, camera = { x: 0, y: 0 }) {
+    render(context, tilesize = 1, ratio = 1, camera = { x: 0, y: 0 }) {
         if (this.stroke) {
             context.lineWidth = this.strokeWidth * ratio;
             context.strokeStyle = this.strokeColor;
@@ -35,6 +37,7 @@ export class Text {
             // Content is split into an array of lines
             for (let i = 0; i < this.content.length; i++) {
                 if (this.stroke) {
+                    context.strokeStyle = this.strokeColor;
                     context.strokeText(
                         this.content[i],
                         (this.x + camera.x) * tilesize * ratio,
