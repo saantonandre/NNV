@@ -30,7 +30,7 @@ export class Perceptron {
          */
         this.computedOutput = 0;
 
-        /** The perceptron's bias (will get ranzomized on initialization)
+        /** The perceptron's bias
          * @type {Number}
          */
         this.bias = 0;

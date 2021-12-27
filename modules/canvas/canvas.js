@@ -7,7 +7,7 @@ canvas.height = 600;
 
 /** Prevents right clicks menu from appearing */
 window.oncontextmenu = function(event) {
-    event.preventDefault();
+    //event.preventDefault();
 }
 /** Moves the canvas to the center by giving it an offset to the top/left sides */
 function centerCanvas() {

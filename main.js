@@ -39,8 +39,21 @@ let dataset = [{
     }
 ]
 let neuralNetwork = new NeuralNetwork();
-
 neuralNetwork.initialize(2, [4], 1);
-//neuralNetwork.test(c, canvas);
-neuralNetwork.train(dataset, 15000);
+neuralNetwork.train(dataset, 10000);
 neuralNetwork.render(c, canvas);
+
+//neuralNetwork.test(c, canvas);
+//measureAverage(1000, 5000);
+
+function measureAverage(neuralNetworks, iterations) {
+    let neuralNetwork;
+    let average = 0;
+    for (let i = 0; i < neuralNetworks; i++) {
+        neuralNetwork = new NeuralNetwork();
+        neuralNetwork.initialize(2, [4], 1);
+        average += neuralNetwork.train(dataset, iterations);
+    }
+    neuralNetwork.render(c, canvas);
+    console.log(average / neuralNetworks);
+}

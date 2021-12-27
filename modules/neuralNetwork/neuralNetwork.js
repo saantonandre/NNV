@@ -20,7 +20,7 @@ export class NeuralNetwork {
         this.outputLayer;
 
         /** Represents the impact of errors over the back propagation */
-        this.learningRate = 0.99;
+        this.learningRate = 1;
 
         /** Init parameters */
         this.initParams = [];
@@ -62,16 +62,16 @@ export class NeuralNetwork {
         }
         this.hiddenLayers[this.hiddenLayers.length - 1].link(this.outputLayer);
         this.layers = this.layersArray;
-        this.randomize();
+        this.randomize(10);
     }
 
-    /** Initializes every bias and weight as a random amount (between -1 and 1) */
-    randomize() {
+    /** Initializes every weight as a random amount (between -5 and 5) */
+    randomize(range) {
         this.layers.forEach(layer => {
             layer.nodes.forEach(perceptron => {
-                perceptron.bias = Math.random() * 10 - 5;
                 perceptron.forwardLinks.forEach(link => {
-                    link.weight = Math.random() * 10 - 5;
+                    link.weight = Math.random() * range - (range / 2);
+                    //link.weight = Math.random() > 0.5 ? range : -range;
                 })
             })
         })
@@ -164,25 +164,35 @@ export class NeuralNetwork {
      * Trains this neural network for a given amount of cycles
      *      
      * @param {Number[][]} dataset The dataset with which this neural network will be trained
-     * @param {Number} epochs The amount of cycles
+     * @param {Number} iterations The amount of cycles
      */
-    train(dataset, epochs) {
+    train(dataset, iterations) {
         let random = 0;
-        let cycles = 0;
-        let wrongGuesses = 0;
         let correctGuesses = 0;
-        for (cycles = 0; cycles < epochs; cycles++) {
+        let latterGuesses = 0;
+        let accuracyCount = iterations > 1000 ? 1000 : iterations;
+
+        for (let i = 0; i < iterations; i++) {
             random = Math.random() * dataset.length | 0;
             let guess = this.feedForward(dataset[random].inputs);
-
-            Math.round(guess[0]) === dataset[random].targets[0] ? correctGuesses++ : wrongGuesses++;
-
+            let correct = Math.round(guess[0]) === dataset[random].targets[0];
+            if (correct) {
+                correctGuesses++;
+                if (i >= iterations - accuracyCount) {
+                    latterGuesses++;
+                }
+            }
             this.backPropagation(this.outputLayer, dataset[random].targets)
+            //this.learningRate *= 0.999;
         }
+        //console.log(this.learningRate)
 
-        let accuracy = correctGuesses / (wrongGuesses + correctGuesses) * 100;
-
-        console.log(`Trained for ${cycles} epochs.\n\nAccuracy: ${accuracy}%`)
+        let accuracyAll = correctGuesses / iterations * 100;
+        let accuracyLatter = latterGuesses / accuracyCount * 100;
+        // return accuracy;
+        console.log(`Trained for ${iterations} iterations.\n\nAccuracy: 
+        ${accuracyAll.toFixed(2)}% (overall)
+        ${accuracyLatter.toFixed(2)}% (last ${accuracyCount} iterations)`);
     }
     /**
      * Provisional rendering method
@@ -194,6 +204,29 @@ export class NeuralNetwork {
         let layers = this.layers;
         let nLayers = this.layers.length;
         let nNodes = 0;
+        let colors = {
+            outputs: "#22ffff",
+            weights: "#00ff00",
+            biases: "#aaaaff",
+        }
+        // Display colors graph
+        context.fillStyle = colors.outputs;
+        context.fillRect(10, 10, 20, 20);
+        let oText = new Text(35, 20, colors.outputs, "left");
+        oText.content = "outputs";
+        oText.render(context);
+
+        context.fillStyle = colors.weights;
+        context.fillRect(10, 40, 20, 20);
+        let wText = new Text(35, 50, colors.weights, "left");
+        wText.content = "weights";
+        wText.render(context);
+
+        context.fillStyle = colors.biases;
+        context.fillRect(10, 70, 20, 20);
+        let bText = new Text(35, 80, colors.biases, "left");
+        bText.content = "biases";
+        bText.render(context);
 
         // Define maximum amount of perceptrons;
         layers.forEach(layer => {
@@ -204,17 +237,15 @@ export class NeuralNetwork {
         layers.forEach((layer, i) => {
             layer.nodes.forEach((node, j) => {
                 node.x = canvas.width / nLayers * (i + 0.5);
-                // node.y = (canvas.height / 2) + (j - (layer.nodes.length - 1) / 2) * (canvas.height / nNodes);
-                node.y = j * (canvas.height / nNodes) * (layer.nodes.length / nNodes) + 80;
+                node.y = (canvas.height / 2) + (j - (layer.nodes.length - 1) / 2) * (canvas.height / nNodes);
+                // node.y = j * (canvas.height / nNodes) * (layer.nodes.length / nNodes) + 80;
             })
         })
         // Render links as lines
         layers.forEach((layer, i) => {
             layer.nodes.forEach((node, j) => {
                 node.forwardLinks.forEach(link => {
-                    context.fillStyle = "white";
                     context.strokeStyle = "white";
-
                     context.lineWidth = link.weight;
                     context.beginPath();
                     context.moveTo(node.x, node.y);
@@ -222,31 +253,27 @@ export class NeuralNetwork {
                     context.closePath();
                     context.stroke();
 
-                    context.strokeStyle = "white";
-                    context.fillStyle = "white";
 
-                    let text = new Text(link.backward.x + (link.forward.x - link.backward.x) / 2, link.backward.y + (link.forward.y - link.backward.y) / 2, '#00ff00');
-                    text.content = '' + link.weight;
+                    let text = new Text(link.backward.x + (link.forward.x - link.backward.x) / 1.5, link.backward.y + (link.forward.y - link.backward.y) / 1.5, colors.weights);
+                    text.content = '' + parseFloat(link.weight.toFixed(4));
                     text.render(context)
                 })
             })
         })
 
-        // Render perceptrons as squares
+        // Render perceptrons as filled circles
         layers.forEach((layer, i) => {
             layer.nodes.forEach((node, j) => {
                 context.fillStyle = "white";
-                context.fillRect(
-                    node.x - 20,
-                    node.y - 20,
-                    40,
-                    40
-                )
-                let text = new Text(node.x, node.y)
-                text.content = '' + node.computedOutput;
+                context.beginPath();
+                context.arc(node.x, node.y, 25, 0, Math.PI * 2);
+                context.closePath()
+                context.fill();
+                let text = new Text(node.x, node.y, colors.outputs)
+                text.content = '' + parseFloat(node.computedOutput.toFixed(4));
                 text.render(context)
-                let text2 = new Text(node.x, node.y - 30, "blue")
-                text2.content = '' + node.bias;
+                let text2 = new Text(node.x, node.y - 30, colors.biases)
+                text2.content = '' + parseFloat(node.bias.toFixed(4));
                 text2.render(context)
             })
         })
