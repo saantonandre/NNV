@@ -70,53 +70,31 @@ export class NeuralNetwork {
         this.layers.forEach(layer => {
             layer.nodes.forEach(perceptron => {
                 perceptron.forwardLinks.forEach(link => {
+
                     link.weight = Math.random() * range - (range / 2);
-                    //link.weight = Math.random() > 0.5 ? range : -range;
+                    // link.weight += link.weight > 0 ? range / 2 : -range / 2;
+                    // link.weight = Math.random() > 0.5 ? range : -range
                 })
             })
         })
     }
+
     /** Returns the layer before the given one 
      * 
      * @param {Layer} layer
      * @returns {Layer}
      */
-    previousLayer(layer) {
-        if (layer === this.inputLayer) {
-            throw new Error("There's nothing before the input layer")
-
-        } else if (layer === this.outputLayer) {
-            return this.hiddenLayers[this.hiddenLayers.length - 1];
-
-        } else {
-            let index = this.hiddenLayers.indexOf(layer);
-            if (index == 0) {
-                return this.inputLayer;
-            } else {
-                return this.hiddenLayers[index - 1];
-            }
-        }
+    prevLayer(layer) {
+        return this.layers[this.layers.indexOf(layer) - 1];
     }
+
     /** Returns the layer after the given one 
      * 
      * @param {Layer} layer
      * @returns {Layer}
      */
     nextLayer(layer) {
-        if (layer === this.inputLayer) {
-            return this.hiddenLayers[0];
-
-        } else if (layer === this.outputLayer) {
-            throw new Error("There's nothing after the output layer");
-
-        } else {
-            let index = this.hiddenLayers.indexOf(layer);
-            if (index == this.hiddenLayers.length - 1) {
-                return this.outputLayer;
-            } else {
-                return this.hiddenLayers[index + 1];
-            }
-        }
+        return this.layers[this.layers.indexOf(layer) + 1];
     }
 
     /**
@@ -131,42 +109,44 @@ export class NeuralNetwork {
         layers.forEach(layer => {
             if (layer === this.inputLayer) {
                 layer.set(inputs);
-                layer.sendOutputs();
             } else {
-                layer.computeSum();
-                layer.applyBias();
-                layer.activation();
-                layer.sendOutputs();
+                layer.computeSums();
+                layer.addBiases();
+                layer.computeActivations();
             }
         })
 
         return this.outputLayer.values;
     }
+
     /**
      * Given a layer and its correct expected output, computes the error and propagates it backwards through each layer
      * This is a recursive function which will terminate once arrived back to the input layer
      * 
      * @param {Layer} layer The layer computing the error
-     * @param {Number[]} target The expected answer to compare with the output's guess.
+     * @param {Number[]} targets The expected answer to compare with the output's guess
+     * @param {Number} learningRate The ratio of the impact of the error over the biases/weights
      * 
      * @returns {Boolean} True when the recursion ends 
      */
-    backPropagation(layer, targets) {
+    backPropagation(layer, targets, learningRate = this.learningRate) {
         layer.getErrors(targets);
         if (layer === this.inputLayer) {
-            // The input layer doesn't back-propagate
-            return true;
+            return true; // The input layer doesn't back-propagate
         }
-        layer.tweak(this.learningRate);
-        this.backPropagation(this.previousLayer(layer), targets)
+        layer.tweak(learningRate);
+        this.backPropagation(this.prevLayer(layer), targets)
     }
+
     /**
      * Trains this neural network for a given amount of cycles
      *      
      * @param {Object[]} dataset The dataset with which this neural network will be trained
      * @param {Number} iterations The amount of cycles
+     * 
+     * @returns {Number} Accuracy of the latter 1000 tests
      */
-    train(dataset, iterations) {
+    train(dataset, iterations, log = false) {
         let random = 0;
         let correctGuesses = 0;
         let latterGuesses = 0;
@@ -175,6 +155,8 @@ export class NeuralNetwork {
         for (let i = 0; i < iterations; i++) {
             random = Math.random() * dataset.length | 0;
             let guess = this.feedForward(dataset[random].inputs);
+
+            // Counts the correct guesses
             let correct = Math.round(guess[0]) === dataset[random].targets[0];
             if (correct) {
                 correctGuesses++;
@@ -182,18 +164,23 @@ export class NeuralNetwork {
                     latterGuesses++;
                 }
             }
-            this.backPropagation(this.outputLayer, dataset[random].targets)
-            //this.learningRate *= 0.999;
+            this.backPropagation(this.outputLayer, dataset[random].targets, this.learningRate);
         }
-        //console.log(this.learningRate)
 
+
+
+        // logs the accuracy on the console
         let accuracyAll = correctGuesses / iterations * 100;
         let accuracyLatter = latterGuesses / accuracyCount * 100;
-        // return accuracy;
-        console.log(`Trained for ${iterations} iterations.\n\nAccuracy: 
-        ${accuracyAll.toFixed(2)}% (overall)
-        ${accuracyLatter.toFixed(2)}% (last ${accuracyCount} iterations)`);
+        if (log) {
+            console.log(`Trained for ${iterations} iterations.\n\nAccuracy: 
+            ${accuracyAll.toFixed(2)}% (overall)
+            ${accuracyLatter.toFixed(2)}% (last ${accuracyCount} iterations)`);
+        }
+
+        return accuracyLatter;
     }
+
     /**
      * Provisional rendering method
      *
@@ -246,7 +233,7 @@ export class NeuralNetwork {
             layer.nodes.forEach((node, j) => {
                 node.forwardLinks.forEach(link => {
                     context.strokeStyle = "lightgreen";
-                    context.lineWidth = link.weight;
+                    context.lineWidth = Math.abs(link.weight);
                     context.beginPath();
                     context.moveTo(node.x, node.y);
                     context.lineTo(link.forward.x, link.forward.y);

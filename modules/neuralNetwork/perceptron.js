@@ -41,20 +41,15 @@ export class Perceptron {
          */
         this.error = 0;
     }
+
     /** 
-     * Given the direction of incoming inputs, computes the sum of the product of each value times the weigths
-     * 
-     * @param {'backward' | 'forward'} [direction] The direction of the links
+     * Computes the sum of the product of each backward value times the link weigths
      */
-    computeSum(direction = 'forward') {
+    computeSum() {
         this.sum = 0;
-        switch (direction) {
-            case 'forward':
-                this.backwardLinks.forEach(link => {
-                    this.sum += link.carriedValue * link.weight;
-                })
-                break;
-        }
+        this.backwardLinks.forEach(link => {
+            this.sum += link.backward.computedOutput * link.weight;
+        })
     }
 
     /** 
@@ -78,10 +73,12 @@ export class Perceptron {
         this.forwardLinks = [];
         this.backwardLinks = [];
     }
+
     /** Adds this perceptron's bias to its sum */
     addBias() {
-        this.sum += this.bias;
+        this.sum += this.bias * this.backwardLinks.length;
     }
+
     /** 
      * Creates a new link between this perceptron and another one in the right direction.
      * @param {Perceptron} perceptron A given perceptron to link to
@@ -93,26 +90,11 @@ export class Perceptron {
         perceptron.backwardLinks.push(link);
     }
 
-    /** 
-     * Sends the output through each link towards a given direction
-     * @param {'backward' | 'forward'} [direction] = The direction of the links, defaults to 'forward'
-     */
-    sendOutput(direction = 'forward') {
-        switch (direction) {
-            case 'backward':
-                this.backwardLinks.forEach(link => {
-                    link.carriedValue = this.computedOutput;
-                })
-                break;
-            case 'forward':
-                this.forwardLinks.forEach(link => {
-                    link.carriedValue = this.computedOutput;
-                })
-                break;
-        }
-    }
     /**
      * Computes the errors and tweaks the weights, relatively to a target or to the forward weights
+     * 
+     * NOTE: Requires a target parameter, but only the input layer will use it.
+     * Other layers will take a share of the forward errors.
      * @param {Number} target 
      * @returns {Number} this.error
      */
@@ -127,6 +109,7 @@ export class Perceptron {
         }
         return this.error;
     }
+
     /** 
      * Tweaks the bias and weights relatively to this.error 
      * @param {Number} learningRate
@@ -163,12 +146,6 @@ class Link {
          * @type {Number}
          */
         this.weight = 0.5;
-
-        /** 
-         * Carried input
-         * @type {Number}
-         */
-        this.carriedValue = 0;
 
         /** Left end of the link 
          * @type {Perceptron}

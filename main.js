@@ -1,58 +1,43 @@
 import { NeuralNetwork } from './modules/neuralNetwork/neuralNetwork.js';
 import { c, canvas } from './modules/canvas/canvas.js';
 
-let xorDataset = [{
-        inputs: [
-            0,
-            1
-        ],
-        targets: [
-            1
-        ]
-    },
-    {
-        inputs: [
-            1,
-            0
-        ],
-        targets: [
-            1
-        ]
-    },
-    {
-        inputs: [
-            0,
-            0
-        ],
-        targets: [
-            0
-        ]
-    },
-    {
-        inputs: [
-            1,
-            1
-        ],
-        targets: [
-            0
-        ]
-    }
-];
 
-let neuralNetwork = new NeuralNetwork();
-neuralNetwork.initialize(2, [4], 1);
-neuralNetwork.train(xorDataset, 10000);
-neuralNetwork.render(c, canvas);
+fetch('./trainingData.json')
+    .then(response => response.json())
+    .then(dataset => setup(dataset));
 
-//neuralNetwork.test(c, canvas);
-//measureAverage(1000, 5000);
+const INPUT = 2,
+    HIDDENS = [4],
+    OUTPUT = 1;
 
-function measureAverage(neuralNetworks, iterations) {
+
+function setup(dataset) {
+    let neuralNetwork = new NeuralNetwork();
+    window.nn = neuralNetwork;
+    neuralNetwork.initialize(INPUT, HIDDENS, OUTPUT);
+    neuralNetwork.train(dataset, 5000, true);
+    neuralNetwork.render(c, canvas);
+}
+
+function setup2(dataset) {
+    measureAverage(1000, 5000, dataset);
+}
+
+/**
+ * Tests the average accuracy of the NN.
+ * 
+ * It does so by creating a specified amount of new instances and
+ * testing each istance for a specified amount of iterations
+ * 
+ * @param {Number} neuralNetworks Amount of neural network to take as subject
+ * @param {Number} iterations Amount of iterations for each neural network to compute
+ */
+function measureAverage(neuralNetworks, iterations, dataset) {
     let neuralNetwork;
     let average = 0;
     for (let i = 0; i < neuralNetworks; i++) {
         neuralNetwork = new NeuralNetwork();
-        neuralNetwork.initialize(2, [4], 1);
+        neuralNetwork.initialize(INPUT, HIDDENS, OUTPUT);
         average += neuralNetwork.train(dataset, iterations);
     }
     neuralNetwork.render(c, canvas);

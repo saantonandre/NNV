@@ -14,6 +14,7 @@ export class Layer {
 
         this.initialize(perceptronsAmount);
     }
+
     /**
      * Pushes the computed outputs of each perceptron in an array and returns it
      * @returns {Number[]}
@@ -23,6 +24,7 @@ export class Layer {
         this.nodes.forEach(perceptron => { layerValues.push(perceptron.computedOutput) })
         return layerValues;
     }
+
     /**
      * Returns a matrix representing the weights of each perceptron of this layer
      * @returns {Number[][]}
@@ -38,6 +40,7 @@ export class Layer {
         })
         return weightsArr;
     }
+
     /**
      * Returns a matrix representing the weights of each perceptron of this layer
      * @returns {Number[][]}
@@ -49,6 +52,7 @@ export class Layer {
         })
         return biasesArr;
     }
+
     /** 
      * Initializes the layer by adding a specified amount of perceptrons
      *  
@@ -75,16 +79,6 @@ export class Layer {
     }
 
     /** 
-     * For each perceptron, adds its bias to its sum
-     *  
-     */
-    applyBias() {
-        // Links each perceptron of this layer to each perceptron of the given layer
-        this.nodes.forEach(perceptron => {
-            perceptron.addBias();
-        })
-    }
-    /** 
      * Sets this nodes output values to a specific amount.
      * 
      * Values length must be the same amount as the length of this nodes
@@ -102,24 +96,33 @@ export class Layer {
     }
 
     /** 
-     * Sends the values inside a layer to a given direction
+     * Collects and sums the values of (weights * biases) from the previous layer
      * 
-     * @param {'backward' | 'forward'} direction The direction of the links
      */
-    sendOutputs(direction = 'forward') {
+    computeSums() {
         this.nodes.forEach(perceptron => {
-            perceptron.sendOutput(direction);
+            perceptron.computeSum();
         })
     }
 
     /** 
-     * Collects and sums the values of the backward links
-     * 
-     * @param {'backward' | 'forward'} direction The direction of the links
+     * For each perceptron, adds its bias to its sum
+     *  
      */
-    computeSum(direction = 'forward') {
+    addBiases() {
+        // Links each perceptron of this layer to each perceptron of the given layer
         this.nodes.forEach(perceptron => {
-            perceptron.computeSum(direction);
+            perceptron.addBias();
+        })
+    }
+
+    /** 
+     * Calls the activation function to each perceptron in this layer
+     * 
+     */
+    computeActivations() {
+        this.nodes.forEach(perceptron => {
+            perceptron.computedOutput = perceptron.activation();
         })
     }
 
@@ -147,15 +150,7 @@ export class Layer {
             perceptron.tweak(learningRate);
         });
     }
-    /** 
-     * Calls the activation function to each perceptron in this layer
-     * 
-     */
-    activation() {
-        this.nodes.forEach(perceptron => {
-            perceptron.computedOutput = perceptron.activation();
-        })
-    }
+
     /** 
      * Calls the deactivation function to each perceptron in this layer
      * 
