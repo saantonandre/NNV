@@ -153,17 +153,17 @@ export class NeuralNetwork {
      */
     backPropagation(layer, targets) {
         layer.getErrors(targets);
-        layer.tweak(this.learningRate);
         if (layer === this.inputLayer) {
             // The input layer doesn't back-propagate
             return true;
         }
+        layer.tweak(this.learningRate);
         this.backPropagation(this.previousLayer(layer), targets)
     }
     /**
      * Trains this neural network for a given amount of cycles
      *      
-     * @param {Number[][]} dataset The dataset with which this neural network will be trained
+     * @param {Object[]} dataset The dataset with which this neural network will be trained
      * @param {Number} iterations The amount of cycles
      */
     train(dataset, iterations) {
@@ -245,7 +245,7 @@ export class NeuralNetwork {
         layers.forEach((layer, i) => {
             layer.nodes.forEach((node, j) => {
                 node.forwardLinks.forEach(link => {
-                    context.strokeStyle = "white";
+                    context.strokeStyle = "lightgreen";
                     context.lineWidth = link.weight;
                     context.beginPath();
                     context.moveTo(node.x, node.y);
@@ -272,9 +272,11 @@ export class NeuralNetwork {
                 let text = new Text(node.x, node.y, colors.outputs)
                 text.content = '' + parseFloat(node.computedOutput.toFixed(4));
                 text.render(context)
-                let text2 = new Text(node.x, node.y - 30, colors.biases)
-                text2.content = '' + parseFloat(node.bias.toFixed(4));
-                text2.render(context)
+                if (layer !== this.inputLayer) {
+                    let text2 = new Text(node.x, node.y - 30, colors.biases)
+                    text2.content = '' + parseFloat(node.bias.toFixed(4));
+                    text2.render(context)
+                }
             })
         })
 

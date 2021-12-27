@@ -1,7 +1,7 @@
 import { NeuralNetwork } from './modules/neuralNetwork/neuralNetwork.js';
 import { c, canvas } from './modules/canvas/canvas.js';
 
-let dataset = [{
+let xorDataset = [{
         inputs: [
             0,
             1
@@ -37,10 +37,11 @@ let dataset = [{
             0
         ]
     }
-]
+];
+
 let neuralNetwork = new NeuralNetwork();
 neuralNetwork.initialize(2, [4], 1);
-neuralNetwork.train(dataset, 10000);
+neuralNetwork.train(xorDataset, 10000);
 neuralNetwork.render(c, canvas);
 
 //neuralNetwork.test(c, canvas);
