@@ -31,8 +31,28 @@ export class NeuralNetwork {
          */
         this.layers = [];
     }
+    /** The layers returned as a single array */
     get layersArray() {
         return [this.inputLayer, ...this.hiddenLayers, this.outputLayer];
+    }
+    saveSettings() {
+        console.log(JSON.stringify(new Settings(this)))
+    }
+    /**
+     * @param {Settings} settings
+     */
+    loadSettings(settings) {
+        this.initialize(...settings.initParams);
+        this.learningRate = settings.learningRate;
+        for (let i = 0; i < this.layersArray.length; i++) {
+            for (let j = 0; j < this.layersArray[i].nodes.length; j++) {
+                this.layersArray[i].nodes[j].bias = settings.layersBiases[i][j];
+                for (let k = 0; k < this.layersArray[i].nodes[j].forwardLinks.length; k++) {
+                    this.layersArray[i].nodes[j].forwardLinks[k].weight = settings.layersWeights[i][j][k];
+                }
+            }
+        }
+
     }
     /** 
      * Initializes the layers by adding a specified amount of perceptrons
@@ -62,10 +82,13 @@ export class NeuralNetwork {
         }
         this.hiddenLayers[this.hiddenLayers.length - 1].link(this.outputLayer);
         this.layers = this.layersArray;
-        this.randomize(10);
+        this.randomize(5);
     }
 
-    /** Initializes every weight as a random amount (between -5 and 5) */
+    /** Initializes every weight as a random amount 
+     * 
+     * @param {Number} range The amount will be a random value between -range/2 and range/2
+     */
     randomize(range) {
         this.layers.forEach(layer => {
             layer.nodes.forEach(perceptron => {
@@ -177,7 +200,6 @@ export class NeuralNetwork {
             ${accuracyAll.toFixed(2)}% (overall)
             ${accuracyLatter.toFixed(2)}% (last ${accuracyCount} iterations)`);
         }
-
         return accuracyLatter;
     }
 
@@ -267,5 +289,51 @@ export class NeuralNetwork {
             })
         })
 
+    }
+}
+class Settings {
+    /**
+     * 
+     * @param {NeuralNetwork} nn 
+     */
+    constructor(nn) {
+        this.initParams = nn.initParams;
+        this.learningRate = nn.learningRate;
+        this.layersBiases = this.getBiases(nn);
+        this.layersWeights = this.getWeights(nn);
+    }
+    /**
+     * 
+     * @param {NeuralNetwork} nn 
+     */
+    getBiases(nn) {
+        let layers = [];
+        for (let i = 0; i < nn.layersArray.length; i++) {
+            let biases = [];
+            for (let j = 0; j < nn.layersArray[i].nodes.length; j++) {
+                biases.push(nn.layersArray[i].nodes[j].bias);
+            }
+            layers.push(biases);
+        }
+        return layers;
+    }
+    /**
+     * 
+     * @param {NeuralNetwork} nn 
+     */
+    getWeights(nn) {
+        let layers = [];
+        for (let i = 0; i < nn.layersArray.length; i++) {
+            let nodes = [];
+            for (let j = 0; j < nn.layersArray[i].nodes.length; j++) {
+                let weights = [];
+                for (let k = 0; k < nn.layersArray[i].nodes[j].forwardLinks.length; k++) {
+                    weights.push(nn.layersArray[i].nodes[j].forwardLinks[k].weight);
+                }
+                nodes.push(weights);
+            }
+            layers.push(nodes);
+        }
+        return layers;
     }
 }

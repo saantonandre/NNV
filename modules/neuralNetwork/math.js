@@ -10,6 +10,8 @@ export function sigmoid(x) {
 }
 
 /** Sigmoid derivative  
+ * 
+ * @param {Number} y The result of a sigmoid
  * @return {Number} 
  */
 export function dsigmoid(y) {

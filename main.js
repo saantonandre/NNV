@@ -6,9 +6,9 @@ fetch('./trainingData.json')
     .then(response => response.json())
     .then(dataset => setup(dataset));
 
-const INPUT = 2,
-    HIDDENS = [4],
-    OUTPUT = 1;
+const INPUT = [2];
+const HIDDENS = [4];
+const OUTPUT = 1;
 
 
 function setup(dataset) {
@@ -20,7 +20,7 @@ function setup(dataset) {
 }
 
 function setup2(dataset) {
-    measureAverage(1000, 5000, dataset);
+    measureAverage(1000, 10000, dataset);
 }
 
 /**
@@ -29,7 +29,7 @@ function setup2(dataset) {
  * It does so by creating a specified amount of new instances and
  * testing each istance for a specified amount of iterations
  * 
- * @param {Number} neuralNetworks Amount of neural network to take as subject
+ * @param {Number} neuralNetworks Amount of neural networks to take as subject
  * @param {Number} iterations Amount of iterations for each neural network to compute
  */
 function measureAverage(neuralNetworks, iterations, dataset) {
