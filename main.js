@@ -1,5 +1,4 @@
 import { NeuralNetwork } from './modules/neuralNetwork/neuralNetwork.js';
-import { c, canvas } from './modules/canvas/canvas.js';
 
 
 fetch('./trainingData.json')
@@ -15,8 +14,7 @@ function setup(dataset) {
     let neuralNetwork = new NeuralNetwork();
     window.nn = neuralNetwork;
     neuralNetwork.initialize(INPUT, HIDDENS, OUTPUT);
-    neuralNetwork.train(dataset, 5000, true);
-    neuralNetwork.render(c, canvas);
+    neuralNetwork.train(dataset, 2000, true);
 }
 
 function setup2(dataset) {
