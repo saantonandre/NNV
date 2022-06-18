@@ -1,6 +1,7 @@
-import { Perceptron } from './perceptron.js';
+//import { Perceptron } from './perceptron.js';
+importScripts("./modules/neuralNetwork/perceptron.js")
 /** A neural network layer */
-export class Layer {
+class Layer {
     /**
      * Creates a layer with a specified amount of perceptrons
      * @param {Number} perceptronsAmount 
@@ -161,3 +162,4 @@ export class Layer {
         })
     }
 }
+// export {Layer}

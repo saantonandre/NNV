@@ -1,4 +1,6 @@
-import { sigmoid, dsigmoid } from './math.js';
+// import { sigmoid, dsigmoid } from './math.js';
+importScripts("./modules/neuralNetwork/math.js")
+
 
 /** 
  * A single perceptron. 
@@ -7,7 +9,7 @@ import { sigmoid, dsigmoid } from './math.js';
  * - Process them with its activation function
  * - Send it to its links on the opposite side
  */
-export class Perceptron {
+class Perceptron {
     constructor() {
 
         /** Links connected to the forward layer's perceptrons 
@@ -158,3 +160,5 @@ class Link {
         this.forward = perceptronB;
     }
 }
+
+// export {Perceptron, Link}

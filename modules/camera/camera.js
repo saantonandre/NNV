@@ -1,10 +1,10 @@
 export class Camera {
-    constructor(focus = { x: 0, y: 0, w: 0, h: 0 }) {
+    constructor(focus = false/*{ x: 0, y: 0, w: 0, h: 0 }*/) {
         this.focus = focus;
         this.lockedAngles = true;
         this.zoom = false;
-        this.x = focus.x;
-        this.y = focus.y;
+        this.x = 0;
+        this.y = 0;
         this.shake = 0;
     }
     changeFocus(actor, smoothly = false) {

@@ -26,7 +26,7 @@ export const c = canvas.getContext("2d");
 // Disables anti aliasing
 c.imageSmoothingEnabled = false;
 
-// Clears the canvas (gets called every frame before drawing)
+/** Clears the canvas (gets called every frame before drawing) */ 
 c.clear = () => {
     c.clearRect(0, 0, canvas.width, canvas.height);
 }

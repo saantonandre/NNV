@@ -1,8 +1,8 @@
-import { Layer } from "./layer.js";
-import { Text } from "../text/text.js";
-import { c, canvas } from "../canvas/canvas.js";
+// import { Layer } from "./layer.js";
+// import {Gui} from "./gui.js";
+importScripts("./modules/neuralNetwork/layer.js");
 
-export class NeuralNetwork {
+class NeuralNetwork {
   /** Creates a new instance of a neural network */
   constructor() {
     /**
@@ -31,6 +31,27 @@ export class NeuralNetwork {
      * @type {Layer[]}
      */
     this.layers = [];
+
+    /**
+     * An object providing rendering functionalities
+     * @type {Gui}
+     */
+    //this.gui = new Gui();
+    /**
+     * Keeps track of training data
+     */
+    this.data = {
+      iterations: 0,
+      accuracyLatter: 0,
+      accuracy: 0,
+    };
+
+
+
+    /**
+     * Rendering frame skips
+     */
+    this.speed = 10000;
   }
   /** The layers returned as a single array */
   get layersArray() {
@@ -45,19 +66,14 @@ export class NeuralNetwork {
   loadSettings(settings) {
     this.initialize(...settings.initParams);
     this.learningRate = settings.learningRate;
-    for (let i = 0; i < this.layersArray.length; i++) {
-      for (let j = 0; j < this.layersArray[i].nodes.length; j++) {
-        this.layersArray[i].nodes[j].bias = settings.layersBiases[i][j];
-        for (
-          let k = 0;
-          k < this.layersArray[i].nodes[j].forwardLinks.length;
-          k++
-        ) {
-          this.layersArray[i].nodes[j].forwardLinks[k].weight =
-            settings.layersWeights[i][j][k];
-        }
-      }
-    }
+    this.layersArray.forEach((layer, i) => {
+      layer.nodes.forEach((node, j) => {
+        node.bias = settings.layersBiases[i][j];
+        node.forwardLinks.forEach((forwardLink, k) => {
+          forwardLink.weight = settings.layersWeights[i][j][k];
+        });
+      });
+    });
   }
   /**
    * Initializes the layers by adding a specified amount of perceptrons
@@ -101,8 +117,6 @@ export class NeuralNetwork {
       layer.nodes.forEach((perceptron) => {
         perceptron.forwardLinks.forEach((link) => {
           link.weight = Math.random() * range - range / 2;
-          // link.weight += link.weight > 0 ? range / 2 : -range / 2;
-          // link.weight = Math.random() > 0.5 ? range : -range
         });
       });
     });
@@ -158,14 +172,14 @@ export class NeuralNetwork {
    *
    * @returns {Boolean} True when the recursion ends
    */
-  backPropagation(layer, targets, learningRate = this.learningRate) {
+  backPropagation = (layer, targets, learningRate = this.learningRate) => {
     layer.getErrors(targets);
     if (layer === this.inputLayer) {
       return true; // The input layer doesn't back-propagate
     }
     layer.tweak(learningRate);
     this.backPropagation(this.prevLayer(layer), targets);
-  }
+  };
 
   /**
    * Trains this neural network for a given amount of cycles
@@ -175,13 +189,12 @@ export class NeuralNetwork {
    *
    * @returns {Number} Accuracy of the latter 1000 tests
    */
-  train(dataset, iterations, log = false) {
+  async train(dataset, iterations, log = false) {
     let random = 0;
     let correctGuesses = 0;
     let latterGuesses = 0;
-    let accuracyCount = iterations > 1000 ? 1000 : iterations;
+    const accuracyCount = iterations > 1000 ? 1000 : iterations;
     let latterArray = [];
-    const speed=1;
     const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
 
     const results = () => {
@@ -197,7 +210,8 @@ export class NeuralNetwork {
       }
       return accuracyLatter;
     };
-    const iteration = (counter, renderFn) => {
+    const breathe = () => new Promise((res) => setTimeout(res, 1));
+    for (let counter = iterations; counter > 0; counter) {
       random = (Math.random() * dataset.length) | 0;
       let guess = this.feedForward(dataset[random].inputs);
 
@@ -219,140 +233,18 @@ export class NeuralNetwork {
         dataset[random].targets,
         this.learningRate
       );
-      counter--
-      let data = {
+      counter--;
+      this.data = {
         iterations: iterations - counter,
         accuracyLatter: (avg(latterArray) * 100).toFixed(2),
-        accuracy: ((correctGuesses / (iterations - counter)) * 100).toFixed(
-          2
-        ),
+        accuracy: ((correctGuesses / (iterations - counter)) * 100).toFixed(2),
       };
       if (counter < 0) {
         return results();
       }
-      if (counter % speed && counter!==0) {
-        iteration(counter, renderFn);
-      } else {
-        requestAnimationFrame(() => {
-          renderFn(data);
-          iteration(counter, renderFn);
-        });
+      if (!(counter % this.speed)) {
+        await breathe();
       }
-    };
-    iteration(iterations, (data) => {
-      this.render(c, canvas, data);
-    });
-  }
-
-  /**
-   * Provisional rendering method
-   *
-   * @param {CanvasRenderingContext2D} context
-   * @param {HTMLCanvasElement} canvas
-   * @param {object | null} data
-   */
-  render(context, canvas, data = null) {
-    c.clear();
-    let layers = this.layers;
-    let nLayers = this.layers.length;
-    let nNodes = 0;
-    let colors = {
-      outputs: "#22ffff",
-      weights: "#00ff00",
-      biases: "#aaaaff",
-    };
-    // Display colors graph
-    context.fillStyle = colors.outputs;
-    context.fillRect(10, 0, 20, 20);
-    let oText = new Text(35, 10, colors.outputs, "left");
-    oText.content = "outputs";
-    oText.render(context);
-
-    context.fillStyle = colors.weights;
-    context.fillRect(10, 30, 20, 20);
-    let wText = new Text(35, 40, colors.weights, "left");
-    wText.content = "weights";
-    wText.render(context);
-
-    context.fillStyle = colors.biases;
-    context.fillRect(10, 60, 20, 20);
-    let bText = new Text(35, 70, colors.biases, "left");
-    bText.content = "biases";
-    bText.render(context);
-
-    // Define maximum amount of perceptrons;
-    layers.forEach((layer) => {
-      layer.nodes.length > nNodes ? (nNodes = layer.nodes.length) : false;
-    });
-
-    // Assign coordinates to each perceptron;
-    layers.forEach((layer, i) => {
-      layer.nodes.forEach((node, j) => {
-        node.x = (canvas.width / nLayers) * (i + 0.5);
-        node.y =
-          canvas.height / 2 +
-          (j - (layer.nodes.length - 1) / 2) * (canvas.height / nNodes);
-        // node.y = j * (canvas.height / nNodes) * (layer.nodes.length / nNodes) + 80;
-      });
-    });
-    // Render links as lines
-    layers.forEach((layer, i) => {
-      layer.nodes.forEach((node, j) => {
-        node.forwardLinks.forEach((link) => {
-          context.strokeStyle = "lightgreen";
-          context.lineWidth = Math.abs(link.weight);
-          context.beginPath();
-          context.moveTo(node.x, node.y);
-          context.lineTo(link.forward.x, link.forward.y);
-          context.closePath();
-          context.stroke();
-
-          let text = new Text(
-            link.backward.x + (link.forward.x - link.backward.x) / 1.5,
-            link.backward.y + (link.forward.y - link.backward.y) / 1.5,
-            colors.weights
-          );
-          text.content = "" + parseFloat(link.weight.toFixed(4));
-          text.render(context);
-        });
-      });
-    });
-
-    // Render perceptrons as filled circles
-    layers.forEach((layer, i) => {
-      layer.nodes.forEach((node, j) => {
-        context.fillStyle = "white";
-        context.strokeStyle = colors.biases;
-        context.lineWidth = node.bias * 5;
-        context.beginPath();
-        context.arc(node.x, node.y, 25, 0, Math.PI * 2);
-        context.closePath();
-        context.fill();
-        context.stroke();
-        let text = new Text(node.x, node.y, colors.outputs);
-        text.content = "" + parseFloat(node.computedOutput.toFixed(4));
-        text.render(context);
-        if (layer !== this.inputLayer) {
-          let text2 = new Text(node.x, node.y - 30, colors.biases);
-          text2.content = "" + parseFloat(node.bias.toFixed(4));
-          text2.render(context);
-        }
-      });
-    });
-
-    // Render data
-    if (data) {
-      let iText = new Text(canvas.width, 10, "white", "right");
-      iText.content = `Iteration: ${data.iterations}`;
-      iText.render(context);
-
-      let lText = new Text(canvas.width, 30, "white", "right");
-      lText.content = `Accuracy(300): ${data.accuracyLatter}%`;
-
-      lText.render(context);
-      let aText = new Text(canvas.width, 50, "white", "right");
-      aText.content = `Accuracy: ${data.accuracy}%`;
-      aText.render(context);
     }
   }
 }
@@ -372,37 +264,17 @@ class Settings {
    * @param {NeuralNetwork} nn
    */
   getBiases(nn) {
-    let layers = [];
-    for (let i = 0; i < nn.layersArray.length; i++) {
-      let biases = [];
-      for (let j = 0; j < nn.layersArray[i].nodes.length; j++) {
-        biases.push(nn.layersArray[i].nodes[j].bias);
-      }
-      layers.push(biases);
-    }
-    return layers;
+    return nn.layersArray.map((layer) => layer.nodes.map((node) => node.bias));
   }
   /**
-   *
    * @param {NeuralNetwork} nn
    */
   getWeights(nn) {
-    let layers = [];
-    for (let i = 0; i < nn.layersArray.length; i++) {
-      let nodes = [];
-      for (let j = 0; j < nn.layersArray[i].nodes.length; j++) {
-        let weights = [];
-        for (
-          let k = 0;
-          k < nn.layersArray[i].nodes[j].forwardLinks.length;
-          k++
-        ) {
-          weights.push(nn.layersArray[i].nodes[j].forwardLinks[k].weight);
-        }
-        nodes.push(weights);
-      }
-      layers.push(nodes);
-    }
-    return layers;
+    return nn.layersArray.map((layer) =>
+      layer.nodes.map((node) =>
+        node.forwardLinks.map((forwardLinks) => forwardLinks.weight)
+      )
+    );
   }
 }
+// export {NeuralNetwork, Settings}

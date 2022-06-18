@@ -1,6 +1,6 @@
 export class Meta {
     constructor() {
-        this.baseRatio = 2;
+        this.baseRatio = 1;
 
         /** Act on the size of each pixel */
         this.ratio = this.baseRatio;

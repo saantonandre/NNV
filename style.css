@@ -1,11 +1,19 @@
 body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Courier New', Courier, monospace;
-    background-color: black;
-    color: white;
+  margin: 0;
+  padding: 0;
+  font-family: "Courier New", Courier, monospace;
+  background-color: #131518;
+  color: white;
 }
 
 h1 {
-    color: white;
+  color: white;
+}
+#options {
+  position: absolute;
+  display: flex;
+  flex-flow: row;
+  top: 30px;
+  left: 5px;
+  user-select:none;
 }
