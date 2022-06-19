@@ -2,8 +2,10 @@
 export const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
 
-canvas.width = 800;
-canvas.height = 600;
+// canvas.width = 800;
+// canvas.height = 600;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 
 /** Prevents right clicks menu from appearing */
 window.oncontextmenu = function(event) {
@@ -12,8 +14,11 @@ window.oncontextmenu = function(event) {
 /** Moves the canvas to the center by giving it an offset to the top/left sides */
 function centerCanvas() {
     canvas.style.position = "absolute";
+    canvas.style.zIndex = "-10";
     canvas.style.left = (window.innerWidth - canvas.width) / 2 + "px";
     canvas.style.top = (window.innerHeight - canvas.height) / 2 + "px";
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
 }
 // Center the canvas at runtime
 centerCanvas();

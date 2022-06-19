@@ -1,7 +1,16 @@
 // import { Layer } from "./layer.js";
 // import {Gui} from "./gui.js";
 importScripts("./modules/neuralNetwork/layer.js");
-
+class NnData {
+  constructor() {
+    this.iterations = 0;
+    this.accuracyLatter = 0;
+    this.accuracy = 0;
+    this.failedSinceLastRender = 0;
+    this.lastGuessWrong = false;
+    this.framesSinceLastRender = 0;
+  }
+}
 class NeuralNetwork {
   /** Creates a new instance of a neural network */
   constructor() {
@@ -40,16 +49,19 @@ class NeuralNetwork {
     /**
      * Keeps track of training data
      */
-    this.data = {
-      iterations: 0,
-      accuracyLatter: 0,
-      accuracy: 0,
+    this.data = new NnData();
+    this.resetData = () => {
+      this.data = new NnData();
     };
 
-
-
+    this.stop = true;
+    this.trainingConfig = {
+      iterations: 0,
+      correctGuesses: 0,
+      latterGuesses: 0,
+    };
     /**
-     * Rendering frame skips
+     * Train to render ratio
      */
     this.speed = 10000;
   }
@@ -86,9 +98,14 @@ class NeuralNetwork {
    * initialize(2,[4,3],1);
    *
    */
-  initialize({speed=1,inputNodes = 2, hiddenNodes = [2], outputNodes = 1}) {
+  initialize({
+    speed = 1,
+    inputNodes = 2,
+    hiddenNodes = [2],
+    outputNodes = 1,
+  }) {
     this.initParams = [inputNodes, hiddenNodes, outputNodes];
-    this.speed=speed;
+    this.speed = speed;
     // Creates the layers
     this.inputLayer = new Layer(inputNodes);
 
@@ -106,6 +123,7 @@ class NeuralNetwork {
     }
     this.hiddenLayers[this.hiddenLayers.length - 1].link(this.outputLayer);
     this.layers = this.layersArray;
+    console.log(this.layers);
     this.randomize(1);
   }
 
@@ -147,7 +165,7 @@ class NeuralNetwork {
    * @param {Number} inputs An array of values to pass through the network
    * @returns {Number[]} The output layer's values
    */
-  feedForward(inputs) {
+  feedForward = (inputs) => {
     let layers = this.layers;
 
     layers.forEach((layer) => {
@@ -161,7 +179,7 @@ class NeuralNetwork {
     });
 
     return this.outputLayer.values;
-  }
+  };
 
   /**
    * Given a layer and its correct expected output, computes the error and propagates it backwards through each layer
@@ -190,12 +208,17 @@ class NeuralNetwork {
    *
    * @returns {Number} Accuracy of the latter 1000 tests
    */
-  async train(dataset, iterations, log = false) {
-    let random = 0;
-    let correctGuesses = 0;
-    let latterGuesses = 0;
+  async train({
+    dataset: dataset,
+    correctCriteria = (outputs) => {},
+    log = false,
+    iterations = 0,
+    correctGuesses = 0,
+    latterGuesses = 0,
+    latterArray = [],
+  }) {
+    console.log("starting");
     const accuracyCount = iterations > 1000 ? 1000 : iterations;
-    let latterArray = [];
     const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
 
     const results = () => {
@@ -211,22 +234,33 @@ class NeuralNetwork {
       }
       return accuracyLatter;
     };
+    /**
+     * Allows the NN to stop for a moment and check its mailbox for messages
+     * @returns {Promise}
+     */
     const breathe = () => new Promise((res) => setTimeout(res, 1));
-    for (let counter = iterations; counter > 0; counter) {
+    let random = 0;
+    for (let counter = iterations; true; true) {
+      counter++;
       random = (Math.random() * dataset.length) | 0;
       let guess = this.feedForward(dataset[random].inputs);
 
       // Counts the correct guesses
-      let correct = Math.round(guess[0]) === dataset[random].targets[0];
+      // Math.round(guess[0]) === dataset[random].targets[0]
+      let correct = correctCriteria(guess, dataset[random].targets);
       if (correct) {
         latterArray.unshift(1);
         correctGuesses++;
+        this.data.lastGuessWrong = false;
         if (counter <= accuracyCount) {
           latterGuesses++;
         }
       } else {
         latterArray.unshift(0);
+        this.data.failedSinceLastRender++;
+        this.data.lastGuessWrong = true;
       }
+      this.data.framesSinceLastRender++;
       latterArray.length > 300 && latterArray.pop();
 
       this.backPropagation(
@@ -234,17 +268,23 @@ class NeuralNetwork {
         dataset[random].targets,
         this.learningRate
       );
-      counter--;
       this.data = {
-        iterations: iterations - counter,
+        ...this.data,
+        iterations: counter,
         accuracyLatter: (avg(latterArray) * 100).toFixed(2),
-        accuracy: ((correctGuesses / (iterations - counter)) * 100).toFixed(2),
+        accuracy: ((correctGuesses / counter) * 100).toFixed(2),
       };
-      if (counter < 0) {
-        return results();
-      }
       if (!(counter % this.speed)) {
         await breathe();
+      }
+      if (this.stop) {
+        this.trainingConfig = {
+          correctGuesses: correctGuesses,
+          latterGuesses: latterGuesses,
+          iterations: counter,
+          latterArray: latterArray,
+        };
+        return results();
       }
     }
   }

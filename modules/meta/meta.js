@@ -78,7 +78,7 @@ export class Meta {
 
     /** Keeps count of the fps, called in a setInterval. */
     fpsCounter = (span) => {
-        span.innerHTML = this.fps;
+        span.innerHTML = this.fps+ " <small>fps</small>";
         this.fps = 0;
     }
 }

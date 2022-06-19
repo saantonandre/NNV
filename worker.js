@@ -1,16 +1,36 @@
 // import { NeuralNetwork } from "./modules/neuralNetwork/neuralNetwork.js";
-importScripts("./modules/neuralNetwork/neuralNetwork.js");
-
 const handleMessage = (e) => {
   switch (e.data.label) {
     case "init":
-      fetch("./trainingData.json")
-        .then((response) => response.json())
-        .then((dataset) => {
-          self.postMessage({ label: "working" });
-          setup({ dataset: dataset });
-          self.postMessage({ label: "done" });
+      problems[selected].load();
+      break;
+    case "config":
+      Object.keys(e.data.changes).forEach(
+        (key) => (neuralNetwork[key] = e.data.changes[key])
+      );
+      break;
+    case "start":
+      if (neuralNetwork.stop) {
+        neuralNetwork.stop = false;
+        neuralNetwork.train({
+          ...neuralNetwork.trainingConfig,
+          ...problems[selected].train,
         });
+      }
+      break;
+    case "pause":
+      neuralNetwork.stop = true;
+      break;
+    case "step":
+      neuralNetwork.stop = true;
+      neuralNetwork.train({
+        ...neuralNetwork.trainingConfig,
+        ...problems[selected].train,
+      });
+      break;
+    case "reset":
+      neuralNetwork.resetData();
+      problems[selected].load();
       break;
     case "state":
       self.postMessage({
@@ -24,70 +44,121 @@ const handleMessage = (e) => {
   }
 };
 self.addEventListener("message", handleMessage);
-const neuralNetwork = new NeuralNetwork();
-const INPUT = [2];
-const HIDDEN = [4];
-const OUTPUT = 1;
-function setup({ dataset, speed=10,input = INPUT, hidden = HIDDEN, output = OUTPUT }) {
-  neuralNetwork.initialize({ speed:speed,inputNodes: input, hiddenNodes: hidden, outputNodes: output });
-  // neuralNetwork.loadSettings(settings);
-  neuralNetwork.train(dataset, 100000, true);
-}
 
-function setup2(dataset) {
-  measureAverage(1000, 10000, dataset);
+importScripts(
+  "./modules/neuralNetwork/neuralNetwork.js",
+  "./modules/idxConverter/idxConverter.js"
+);
+let selected = "xor";
+const problems = {
+  xor: {
+    load: () => {
+      fetch("./trainingData.json")
+        .then((response) => response.json())
+        .then((data) => {
+          setup({ ...problems.xor.layers });
+          problems.xor.train.dataset = data;
+          self.postMessage({ label: "ready" });
+        });
+    },
+    layers: {
+      input: 2,
+      hidden: [8,12,4],
+      output: 1,
+    },
+    train: {
+      dataset: {},
+      correctCriteria: (outputs, targets) => {
+        return Math.round(outputs[0]) === targets[0];
+      },
+    },
+  },
+  mnist: {
+    load: () => {
+      createMnistDataset().then((resp) => {
+        self.postMessage({ label: "Setting up" });
+        setup({ ...problems.mnist.layers });
+        problems.mnist.train.dataset = resp;
+        self.postMessage({ label: "ready" });
+      });
+    },
+    layers: {
+      input: 784,
+      hidden: [128, 64],
+      output: 10,
+    },
+    train: {
+      dataset: {},
+      correctCriteria: (outputs, targets) => {
+        let numGuess = [0, 0];
+        outputs.forEach((g, i) => {
+          if (g > numGuess[1]) {
+            numGuess[0] = i;
+            numGuess[1] = g;
+          }
+        });
+        let numTarget = targets.indexOf(1);
+
+        return numGuess[0] === numTarget;
+      },
+    },
+  },
+};
+const createMnistDataset = async () => {
+  const rawLabelsDataset = await convertIdx(
+    "MNIST/train-labels.idx1-ubyte"
+  ).then((r) => r.rawData);
+  const rawImagesDataset = await convertIdx(
+    "MNIST/train-images.idx3-ubyte"
+  ).then((r) => r.rawData);
+  return formatDataset(rawLabelsDataset, rawImagesDataset);
+};
+
+const neuralNetwork = new NeuralNetwork();
+function setup({ speed = 0, input = [1], hidden = [1], output = 1 }) {
+  neuralNetwork.initialize({
+    speed: speed,
+    inputNodes: input,
+    hiddenNodes: hidden,
+    outputNodes: output,
+  });
 }
 
 /**
- * Tests the average accuracy of the NN.
- *
- * It does so by creating a specified amount of new instances and
- * testing each istance for a specified amount of iterations
- *
- * @param {Number} neuralNetworks Amount of neural networks to take as subject
- * @param {Number} iterations Amount of iterations for each neural network to compute
+ * @param {String} location
+ * @returns {Response}
  */
-function measureAverage(neuralNetworks, iterations, dataset) {
-  let neuralNetwork;
-  let average = 0;
-
-  for (let i = 0; i < neuralNetworks; i++) {
-    neuralNetwork = new NeuralNetwork();
-    neuralNetwork.initialize(INPUT, HIDDENS, OUTPUT);
-    average += neuralNetwork.train(dataset, iterations);
+const fetchFile = async (location) => {
+  return await fetch(location)
+    .then((response) => response)
+    .catch((e) => console.log("Unable to fetch: " + e.message));
+};
+const formatDataset = (labels, images) => {
+  const parsedDataset = [];
+  for (let i = 0; i < labels.length; i++) {
+    parsedDataset.push({
+      inputs: normalizeInputs(images.slice(i * 784, i * 784 + 784)),
+      targets: getTargets(labels[i]),
+    });
   }
-  neuralNetwork.render(c, canvas);
-  console.log(average / neuralNetworks);
+  console.log("Fetched data files");
+  return parsedDataset;
+};
+function normalizeInputs(arr) {
+  let inputs = [];
+  for (let i = 0; i < arr.length; i++) {
+    inputs.push(arr[i] / 255);
+  }
+  return inputs;
 }
 
-const settings = {
-  initParams: [[2], [4], 1],
-  learningRate: 1,
-  layersBiases: [
-    [0, 0],
-    [
-      0.5881571156590575, -1.1218697489666605, -0.9212706467418784,
-      0.6356724469270029,
-    ],
-    [-0.5947030687556563],
-  ],
-  layersWeights: [
-    [
-      [
-        -5.438101362827573, 5.792366499466637, -8.183403449358146,
-        -5.525441427538952,
-      ],
-      [
-        -5.636778286886468, -8.21413808230639, 5.522062452404506,
-        -5.790962908229075,
-      ],
-    ],
-    [
-      [-2.315371637628231],
-      [5.237246099722279],
-      [5.365256811981108],
-      [-2.09347574225194],
-    ],
-    [[]],
-  ],
-};
+/**
+ *
+ * @param {Number} number A number from 0 to 9 representing the label for the MNIST dataset
+ * @returns {Number[]} an array of 10 numbers with a 1 at the index of the argument number
+ */
+function getTargets(number) {
+  let targets = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  targets[number] = 1;
+  return targets;
+}
