@@ -8,12 +8,16 @@ const handleMessage = (e) => {
         .then((response) => response.json())
         .then((dataset) => {
           self.postMessage({ label: "working" });
-          setup(dataset);
+          setup({ dataset: dataset });
           self.postMessage({ label: "done" });
         });
       break;
     case "state":
-      self.postMessage({ label: "state", layers: neuralNetwork.layers, info: neuralNetwork.data });
+      self.postMessage({
+        label: "state",
+        layers: neuralNetwork.layers,
+        info: neuralNetwork.data,
+      });
       break;
     default:
       self.postMessage({ label: "invalid message" });
@@ -22,11 +26,11 @@ const handleMessage = (e) => {
 self.addEventListener("message", handleMessage);
 const neuralNetwork = new NeuralNetwork();
 const INPUT = [2];
-const HIDDENS = [4];
+const HIDDEN = [4];
 const OUTPUT = 1;
-function setup(dataset) {
-  //neuralNetwork.initialize(INPUT, HIDDENS, OUTPUT);
-  neuralNetwork.loadSettings(settings);
+function setup({ dataset, speed=10,input = INPUT, hidden = HIDDEN, output = OUTPUT }) {
+  neuralNetwork.initialize({ speed:speed,inputNodes: input, hiddenNodes: hidden, outputNodes: output });
+  // neuralNetwork.loadSettings(settings);
   neuralNetwork.train(dataset, 100000, true);
 }
 

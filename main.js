@@ -1,5 +1,5 @@
 import { Gui } from "./modules/neuralNetwork/gui.js";
-let worker = new Worker("compute.js");
+let worker = new Worker("worker.js");
 
 const handleMessage = (e) => {
   switch (e.data.label) {

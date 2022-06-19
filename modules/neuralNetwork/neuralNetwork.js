@@ -86,8 +86,9 @@ class NeuralNetwork {
    * initialize(2,[4,3],1);
    *
    */
-  initialize(inputNodes = 2, hiddenNodes = [2], outputNodes = 1) {
+  initialize({speed=1,inputNodes = 2, hiddenNodes = [2], outputNodes = 1}) {
     this.initParams = [inputNodes, hiddenNodes, outputNodes];
+    this.speed=speed;
     // Creates the layers
     this.inputLayer = new Layer(inputNodes);
 
@@ -105,7 +106,7 @@ class NeuralNetwork {
     }
     this.hiddenLayers[this.hiddenLayers.length - 1].link(this.outputLayer);
     this.layers = this.layersArray;
-    this.randomize(5);
+    this.randomize(1);
   }
 
   /** Initializes every weight as a random amount
