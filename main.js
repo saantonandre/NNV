@@ -1,6 +1,10 @@
 import { Gui } from "./modules/neuralNetwork/gui.js";
 let worker = new Worker("worker.js");
 
+/** 
+ * Handles worker messages 
+ * @param {Event} e Message Event object
+ */
 const handleMessage = (e) => {
   switch (e.data.label) {
     case "state":
