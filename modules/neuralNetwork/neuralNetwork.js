@@ -11,6 +11,13 @@ class NnData {
     this.framesSinceLastRender = 0;
   }
 }
+class TrainingConfig {
+  constructor() {
+    this.iterations= 0;
+    this.correctGuesses= 0;
+    this.latterGuesses= 0;
+  };
+}
 class NeuralNetwork {
   /** Creates a new instance of a neural network */
   constructor() {
@@ -42,24 +49,17 @@ class NeuralNetwork {
     this.layers = [];
 
     /**
-     * An object providing rendering functionalities
-     * @type {Gui}
-     */
-    //this.gui = new Gui();
-    /**
      * Keeps track of training data
      */
     this.data = new NnData();
+
     this.resetData = () => {
       this.data = new NnData();
+      this.trainingConfig = new TrainingConfig();
     };
 
     this.stop = true;
-    this.trainingConfig = {
-      iterations: 0,
-      correctGuesses: 0,
-      latterGuesses: 0,
-    };
+    this.trainingConfig =  new TrainingConfig();
     /**
      * Train to render ratio
      */
@@ -123,7 +123,6 @@ class NeuralNetwork {
     }
     this.hiddenLayers[this.hiddenLayers.length - 1].link(this.outputLayer);
     this.layers = this.layersArray;
-    console.log(this.layers);
     this.randomize(1);
   }
 

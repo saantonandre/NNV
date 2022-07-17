@@ -1,4 +1,8 @@
-// import { NeuralNetwork } from "./modules/neuralNetwork/neuralNetwork.js";
+
+importScripts(
+  "./modules/neuralNetwork/neuralNetwork.js",
+  "./modules/idxConverter/idxConverter.js"
+);
 const handleMessage = (e) => {
   switch (e.data.label) {
     case "init":
@@ -45,10 +49,6 @@ const handleMessage = (e) => {
 };
 self.addEventListener("message", handleMessage);
 
-importScripts(
-  "./modules/neuralNetwork/neuralNetwork.js",
-  "./modules/idxConverter/idxConverter.js"
-);
 let selected = "xor";
 const problems = {
   xor: {

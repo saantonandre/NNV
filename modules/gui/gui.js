@@ -86,13 +86,7 @@ export class Gui {
   genericButton = (label, action) => {
     let button = document.createElement("button");
     button.innerHTML = label;
-    button.onclick = action
-    return button;
-  };
-  hiddenLayersSelector = (label, action) => {
-    let button = document.createElement("button");
-    button.innerHTML = label;
-    button.onclick = action
+    button.onclick = action;
     return button;
   };
   /**
@@ -128,15 +122,17 @@ export class Gui {
         2;
     }
   };
-  initialize(nLayers,layers){
-    this.baseW=800/3*nLayers;
-    this.baseH=600/4*layers.reduce((max,layer)=>{
-      if(layer.nodes.length>max){
-        return layer.nodes.length;
-      }else{
-        return max;
-      }
-    },0);
+  initialize(nLayers, layers) {
+    this.baseW = (800 / 3) * nLayers;
+    this.baseH =
+      (600 / 4) *
+      layers.reduce((max, layer) => {
+        if (layer.nodes.length > max) {
+          return layer.nodes.length;
+        } else {
+          return max;
+        }
+      }, 0);
     this.offsetX = (window.innerWidth - this.baseW) / 2;
     this.offsetY = (window.innerHeight - this.baseH) / 2;
     this.camera.x = this.offsetX;
@@ -152,12 +148,11 @@ export class Gui {
     context.clear();
     let layers = nn.layers;
     let nLayers = nn.layers.length;
-    if(!this.initialized){
-      this.initialized=true;
-      this.initialize(nLayers,layers)
+    if (!this.initialized) {
+      this.initialized = true;
+      this.initialize(nLayers, layers);
     }
     let nNodes = 0;
-
 
     // Define maximum amount of perceptrons;
     layers.forEach((layer) => {
@@ -175,11 +170,11 @@ export class Gui {
     });
 
     // Render links as lines
-    this.renderLinks(layers,data);
+    this.renderLinks(layers, data);
 
     // Render perceptrons as filled circles
-    this.renderPerceptrons(layers)
-    
+    this.renderPerceptrons(layers);
+
     if (this.displayNumbers) {
       // Render values
       this.renderTexts(nn, layers);
@@ -190,7 +185,7 @@ export class Gui {
       this.renderData(data);
     }
   };
-  renderPerceptrons=(layers)=>{
+  renderPerceptrons = (layers) => {
     layers.forEach((layer) => {
       layer.nodes.forEach((node) => {
         context.fillStyle = this.colors.neurons;
@@ -209,9 +204,8 @@ export class Gui {
         context.stroke();
       });
     });
-  }
-  renderLinks = (layers,data) =>{
-
+  };
+  renderLinks = (layers, data) => {
     layers.forEach((layer) => {
       layer.nodes.forEach((node) => {
         node.forwardLinks.forEach((link) => {
@@ -228,6 +222,8 @@ export class Gui {
           );
           context.closePath();
           context.stroke();
+
+          /* // Error rendering
           if (data && (data.failedSinceLastRender||data.lastGuessWrong)) {
             context.globalAlpha =
               data.failedSinceLastRender? data.failedSinceLastRender/ data.framesSinceLastRender:1;
@@ -245,41 +241,44 @@ export class Gui {
             context.stroke();
             context.globalAlpha = 1;
           }
+          */
         });
       });
     });
-  }
+  };
   renderTexts = (nn, layers) => {
     layers.forEach((layer) => {
       layer.nodes.forEach((node) => {
-        let text = new Text(
-          (node.x + this.camera.x) * this.meta.ratio,
-          (node.y + this.camera.y) * this.meta.ratio,
-          this.colors.outputs
-        );
+        let text = new Text({
+          x: (node.x + this.camera.x) * this.meta.ratio,
+          y: (node.y + this.camera.y) * this.meta.ratio,
+          color: this.colors.outputs,
+        });
         text.content = "" + parseFloat(node.computedOutput.toFixed(4));
         text.render(context);
         if (layer !== nn.inputLayer) {
-          let text2 = new Text(
-            (node.x + this.camera.x) * this.meta.ratio,
-            (node.y - this.nodeSize * 1.2 + this.camera.y) * this.meta.ratio,
-            this.colors.biases
-          );
+          let text2 = new Text({
+            x: (node.x + this.camera.x) * this.meta.ratio,
+            y: (node.y - this.nodeSize * 1.2 + this.camera.y) * this.meta.ratio,
+            color: this.colors.biases,
+          });
           text2.content = "" + parseFloat(node.bias.toFixed(4));
           text2.render(context);
         }
         node.forwardLinks.forEach((link) => {
-          let text = new Text(
-            (link.backward.x +
-              (link.forward.x - link.backward.x) / 1.5 +
-              this.camera.x) *
+          let text = new Text({
+            x:
+              (link.backward.x +
+                (link.forward.x - link.backward.x) / 1.5 +
+                this.camera.x) *
               this.meta.ratio,
-            (link.backward.y +
-              (link.forward.y - link.backward.y) / 1.5 +
-              this.camera.y) *
+            y:
+              (link.backward.y +
+                (link.forward.y - link.backward.y) / 1.5 +
+                this.camera.y) *
               this.meta.ratio,
-            this.colors.weights
-          );
+            color: this.colors.weights,
+          });
           text.content = "" + parseFloat(link.weight.toFixed(4));
           text.render(context);
         });
@@ -293,41 +292,41 @@ export class Gui {
     ["outputs", "weights", "biases"].forEach((label, i) => {
       context.fillStyle = this.colors[label];
       context.fillRect(10, i * 30 + 80, 20, 20);
-      let oText = new Text(
-        35,
-        i * 30 + 10 +80,
-        this.colors[label],
-        "left"
-      );
+      let oText = new Text({
+        x: 35,
+        y: i * 30 + 10 + 80,
+        color: this.colors[label],
+        align: "left",
+      });
       oText.content = label;
       oText.render(context);
     });
   };
   renderData = (data) => {
-    let iText = new Text(
-      window.innerWidth - 20,
-      10 +80,
-      this.colors.infoText,
-      "right"
-    );
+    let iText = new Text({
+      x: window.innerWidth - 20,
+      y: 10 + 80,
+      color: this.colors.infoText,
+      align: "right",
+    });
     iText.content = `Epoch: ${data.iterations}`;
     iText.render(context);
 
-    let lText = new Text(
-      window.innerWidth - 20,
-      30 +80,
-      this.colors.infoText,
-      "right"
-    );
+    let lText = new Text({
+      x: window.innerWidth - 20,
+      y: 30 + 80,
+      color: this.colors.infoText,
+      align: "right",
+    });
     lText.content = `Accuracy(300): ${data.accuracyLatter}%`;
 
     lText.render(context);
-    let aText = new Text(
-      window.innerWidth - 20,
-      50 +80,
-      this.colors.infoText,
-      "right"
-    );
+    let aText = new Text({
+      x: window.innerWidth - 20,
+      y: 50 + 80,
+      color: this.colors.infoText,
+      align: "right",
+    });
     aText.content = `Total accuracy: ${data.accuracy}%`;
     aText.render(context);
   };

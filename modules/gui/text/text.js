@@ -1,5 +1,5 @@
 export class Text {
-    constructor(x, y, color = '#ff0000', align = "center", baseline = "middle") {
+    constructor({x, y, color = '#ff0000', align = "center", baseline = "middle"}) {
         this.content = '';
         this.x = x;
         this.y = y;

@@ -1,9 +1,9 @@
-import { Gui } from "./modules/gui.js";
-/** A spawned worker which will handle heavy NN computations,
- * it to provide the network current state whenever prompted to.
+import { Gui } from "./modules/gui/gui.js";
+/* 
+A spawned worker which will handle heavy NN computations,
+it will provide the current state to the NN whenever prompted to.
  */
 let worker = new Worker("worker.js");
-
 /**
  * Handles worker messages
  * @param {Event} e Message Event object
@@ -28,7 +28,7 @@ worker.addEventListener("message", handleMessage);
  */
 const gui = new Gui();
 
-options = document.getElementById("options");
+const options = document.getElementById("options");
 options.appendChild(
   gui.speedAmount((e) => {
     worker.postMessage({ label: "config", changes: { speed: e.target.value } });
