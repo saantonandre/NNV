@@ -63,7 +63,7 @@ const problems = {
     },
     layers: {
       input: 2,
-      hidden: [8,12,4],
+      hidden: [4],
       output: 1,
     },
     train: {

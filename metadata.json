@@ -1,0 +1,14 @@
+{
+    "name": "Neural network visualizer",
+    "short_name": "NNV",
+    "description":"A work-in-progress project, aimed to display through a GUI the neural network learning process. This 'vanilla' model was initially inpired by the series '10: Neural Networks - The Nature of Code', by the professor Daniel Shiffman. This model though, implements unconventional abstractions for the sole purpose of graphical rendering, in the expense of computational efficiency.",
+    "short_description":"Neural Network with a GUI to display the learning advancement, both for educational and monitoring purposes.",
+    "instructions":"The hidden layers depth and quantity can only be edited through the code, for more informations refer to the main repository at 'https://github.com/saantonandre/NNV'.",
+    "creation-date":"2021-12-18",
+    "thumbnail":"/thumbnail.png",
+    "start_url": "/index.html",
+    "width":"800",
+    "height":"600",
+    "links":[],
+    "resources":["/wired-perceptrons.png","/nnv.png"]
+  }
